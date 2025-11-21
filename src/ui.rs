@@ -54,12 +54,12 @@ pub fn ui(f: &mut Frame, app: &mut App) {
     let pet_widget = Paragraph::new(frame_lines.join("\n"))
         .style(Style::default().fg(status_color))
         .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL).title(" Companion "));
+        .block(Block::default().borders(Borders::ALL).title(" ur brain "));
 
     f.render_widget(pet_widget, top_chunks[0]);
 
     // 2. DASHBOARD (RIGHT)
-    let db_block = Block::default().borders(Borders::ALL).title(" Dashboard ");
+    let db_block = Block::default().borders(Borders::ALL);
     let db_inner = db_block.inner(top_chunks[1]);
     f.render_widget(db_block, top_chunks[1]);
 
