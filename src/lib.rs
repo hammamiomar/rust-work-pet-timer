@@ -1,0 +1,11 @@
+pub mod app;
+pub mod assets;
+pub mod data;
+pub mod inbox;
+pub mod mcp;
+pub mod mood;
+pub mod paths;
+pub mod stats;
+pub mod status;
+pub mod tui;
+pub mod ui;

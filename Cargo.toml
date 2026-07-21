@@ -1,6 +1,6 @@
 [package]
-name = "rust_pet_timer"
-version = "0.3.2"
+name = "hamba_timer"
+version = "0.4.0"
 edition = "2024"
 
 
@@ -11,3 +11,8 @@ chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
+directories = "6"
+tui-textarea = "0.7"
+rmcp = { version = "=2.2.0", features = ["server", "macros", "transport-io"] }
+schemars = "1"
+tokio = { version = "1", features = ["rt", "macros"] }
