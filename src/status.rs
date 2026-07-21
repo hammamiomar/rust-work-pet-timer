@@ -18,7 +18,6 @@ pub struct TodayTotals {
 pub struct StatusSnapshot {
     pub schema_version: u32,
     pub app_alive_at: DateTime<Utc>,
-    pub last_keypress_at: DateTime<Utc>,
     pub state: SessionType,
     pub session_started_at: DateTime<Utc>,
     pub mood: String,
@@ -57,7 +56,6 @@ mod tests {
         StatusSnapshot {
             schema_version: 1,
             app_alive_at: alive_at,
-            last_keypress_at: alive_at,
             state: SessionType::Work,
             session_started_at: alive_at,
             mood: "focused".to_string(),

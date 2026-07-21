@@ -46,7 +46,6 @@ fn event_loop<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(
         if event::poll(timeout)?
             && let Event::Key(key) = event::read()?
                 && key.kind == KeyEventKind::Press {
-                    app.note_keypress();
                     let quit = if app.editor.is_some() {
                         handle_editor_key(app, key);
                         false

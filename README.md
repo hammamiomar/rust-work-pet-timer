@@ -46,7 +46,7 @@ The MCP server reads the same data files the TUI writes, so it answers correctly
 
 | Tool | What the agent gets |
 | :--- | :--- |
-| `get_current_status` | Live state, mood, session elapsed, keyboard liveness, today totals, latest journal entry |
+| `get_current_status` | Live state, mood, session elapsed, today totals, latest journal entry |
 | `get_today_summary` | Totals, ratio, session count, full journal timeline |
 | `get_history` | One day's sessions in detail, or per-day summaries over a range |
 | `get_weekly_stats` | 7-day bars, streak, week total, best day |

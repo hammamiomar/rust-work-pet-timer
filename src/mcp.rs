@@ -110,7 +110,7 @@ impl PetTimerServer {
     }
 
     #[tool(
-        description = "Live snapshot of what the user is doing right now: timer state (WORKING / ON BREAK / IDLE / OFFLINE), how long the current session has run, the pet's mood, keyboard liveness, today's work/break totals, and the latest journal entry. Call this to answer 'what is the user up to?'"
+        description = "Live snapshot of what the user is doing right now: timer state (WORKING / ON BREAK / IDLE / OFFLINE), how long the current session has run, the pet's mood, today's work/break totals, and the latest journal entry. Call this to answer 'what is the user up to?'"
     )]
     fn get_current_status(&self) -> String {
         let now = Utc::now();
@@ -143,7 +143,6 @@ impl PetTimerServer {
                 "session_started_at": s.session_started_at.with_timezone(&Local).to_rfc3339(),
                 "session_elapsed_secs": (now - s.session_started_at).num_seconds(),
                 "session_elapsed_human": human_duration(now - s.session_started_at),
-                "last_keypress_secs_ago": (now - s.last_keypress_at).num_seconds(),
                 "latest_journal_entry": s.latest_journal_entry.as_ref().map(|e| json!({
                     "time": e.time_local().format("%H:%M").to_string(),
                     "text": e.text,

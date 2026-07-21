@@ -48,7 +48,6 @@ pub struct App {
     pub mood: Mood,
     pub mood_caption: String,
     pub last_error: Option<String>,
-    pub last_keypress_at: DateTime<Utc>,
     pub unread: VecDeque<InboxMessage>,
     inbox_mtime: Option<SystemTime>,
     log_path: PathBuf,
@@ -80,7 +79,6 @@ impl App {
             mood: Mood::Neutral,
             mood_caption: String::new(),
             last_error: None,
-            last_keypress_at: Utc::now(),
             unread: VecDeque::new(),
             inbox_mtime: None,
             log_path,
@@ -346,7 +344,6 @@ impl App {
         let snapshot = StatusSnapshot {
             schema_version: 1,
             app_alive_at: Utc::now(),
-            last_keypress_at: self.last_keypress_at,
             state: current.session_type,
             session_started_at: current.start_time,
             mood: self.mood.label().to_string(),
@@ -362,10 +359,6 @@ impl App {
         if let Err(e) = crate::status::write(&self.status_path, &snapshot) {
             self.last_error = Some(format!("status write failed: {e:#}"));
         }
-    }
-
-    pub fn note_keypress(&mut self) {
-        self.last_keypress_at = Utc::now();
     }
 
     pub fn on_tick(&mut self) {
@@ -415,7 +408,6 @@ mod tests {
             mood: Mood::Neutral,
             mood_caption: String::new(),
             last_error: None,
-            last_keypress_at: Utc::now(),
             unread: VecDeque::new(),
             inbox_mtime: None,
             log_path: dir.join("work_log.json"),
