@@ -22,8 +22,11 @@ hamba_timer
 `space` work/break · `s` stop · `n` note · `enter` open/edit
 `↑↓` move · `←→` day · `r` resume · `dd` delete · `q` quit
 
-## agent mode
+## connect to hermes
 
 ```sh
-hamba_timer serve
+hermes mcp add hamba_timer --command "$(which hamba_timer)" --args serve
+hermes mcp test hamba_timer
 ```
+
+hermes can check your timer, summaries, history, and send messages to the pet.
