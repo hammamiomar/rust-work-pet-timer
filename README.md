@@ -6,10 +6,9 @@ A terminal-based work timer with a retro computer pet companion — and an MCP s
 
 ## Features
 
-*   **Computer Companion**: Animated ASCII art that reacts to your state (Working/Break/Idle), with a mood (focused / happy / tired / sleepy) derived from your work-break balance.
+*   **Computer Companion**: Animated ASCII art that reacts to your state (Working/Break/Idle), with a mood (focused / happy / tired / sleepy) derived from your work-break balance. The timer dashboard is stacked beneath it so the app works well in tall, narrow terminal panes.
 *   **Work/Break Tracking**: Logs every session with start/end times. Sessions close honestly on quit — no inflated durations.
-*   **Journal**: Press `n` anytime to log what you're doing in a proper multi-line editor. Entries are timestamped, so your day reads as a timeline.
-*   **Views**: `Tab` cycles the bottom panel — History table ▸ Journal timeline ▸ weekly Stats (7-day bar chart, streak, averages).
+*   **Inline Journal**: Every timer block expands inside the work log to reveal timestamped journal bullets. Add, edit, and delete notes without leaving the table; starting a new timer block opens it and closes the previous one.
 *   **Agent Integration (MCP)**: `hamba_timer serve` runs a stdio MCP server. Your agent can poll live status, today's summary, history, and weekly stats — and send you messages that pop up as speech bubbles from the pet.
 *   **Persistence**: Data lives in your platform data dir (`~/Library/Application Support/pet-timer/` on macOS), written atomically. A legacy `./work_log.json` is migrated automatically on first run.
 
@@ -19,15 +18,16 @@ A terminal-based work timer with a retro computer pet companion — and an MCP s
 | :--- | :--- |
 | **Space** | Toggle between **Working** and **Break** |
 | **s** | **Stop** (Idle mode - pauses tracking) |
-| **n** / **j** | Open the **journal** popup — type and hit Enter to log a timestamped entry (stays open, chat-style); Alt+Enter for a newline, Esc to close |
-| **Tab** | Cycle bottom view: History ▸ Journal ▸ Stats |
+| **n** / **j** | Expand the active timer block and start an inline journal bullet |
+| **Enter** | Open a selected timer block, edit a selected bullet, or activate **+ add note**. While adding, Enter saves the bullet and opens the next blank one |
+| **Alt+Enter** | Insert a newline while editing a journal bullet |
+| **Ctrl+S** | Save the current bullet and leave editing |
 | **m** | Dismiss agent **message** bubble |
-| **r** | **Resume** the selected block — undo accidental toggles: `d` the junk blocks, then `r` your real block to continue it (today only) |
-| **d** | **Delete** selected history entry |
-| **Arrow Up/Down** | Select history / journal entry |
+| **r** | **Resume** the selected block — undo accidental toggles: delete junk blocks with `d`, `d`, then resume the real block (today only) |
+| **d**, then **d** | Confirm deletion of the selected closed timer block or journal bullet |
+| **Arrow Up/Down** | Select timer blocks, or navigate bullets inside an expanded block |
 | **Arrow Left/Right** | Change Day (View past history) |
-| **Enter** | Add journal entry to *selected* history session |
-| **Esc** | Clear selection / Cancel editing |
+| **Esc** | Cancel a draft or deletion, close an expanded block, or clear selection |
 | **q** | Quit |
 
 ## Installation

@@ -2,8 +2,10 @@ use crate::app::App;
 use crate::ui;
 use anyhow::Result;
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent,
-        KeyEventKind, KeyModifiers},
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind,
+        KeyModifiers,
+    },
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
@@ -45,17 +47,18 @@ fn event_loop<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(
             .unwrap_or(std::time::Duration::ZERO);
         if event::poll(timeout)?
             && let Event::Key(key) = event::read()?
-                && key.kind == KeyEventKind::Press {
-                    let quit = if app.editor.is_some() {
-                        handle_editor_key(app, key);
-                        false
-                    } else {
-                        handle_normal_key(app, key)
-                    };
-                    if quit {
-                        break;
-                    }
-                }
+            && key.kind == KeyEventKind::Press
+        {
+            let quit = if app.editor.is_some() {
+                handle_editor_key(app, key);
+                false
+            } else {
+                handle_normal_key(app, key)
+            };
+            if quit {
+                break;
+            }
+        }
         if last_tick.elapsed() >= tick_rate {
             app.on_tick();
             last_tick = Instant::now();
@@ -69,7 +72,7 @@ fn handle_editor_key(app: &mut App, key: KeyEvent) {
     let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
     let alt = key.modifiers.contains(KeyModifiers::ALT);
     match key.code {
-        // Chat-style: Enter logs the entry and keeps the popup open.
+        // Chat-style adding: Enter logs a bullet and keeps a fresh inline row open.
         KeyCode::Enter if !alt => app.commit_journal_entry(),
         KeyCode::Char('s') if ctrl => app.save_journal_entry(),
         KeyCode::Esc => app.cancel_journal(),
@@ -87,6 +90,9 @@ fn handle_editor_key(app: &mut App, key: KeyEvent) {
 
 /// Returns true when the app should quit.
 fn handle_normal_key(app: &mut App, key: KeyEvent) -> bool {
+    if key.code != KeyCode::Char('d') && key.code != KeyCode::Esc {
+        app.cancel_delete_confirmation();
+    }
     match key.code {
         KeyCode::Char('q') => return true,
         KeyCode::Char(' ') => app.toggle_work_break(),
@@ -95,16 +101,12 @@ fn handle_normal_key(app: &mut App, key: KeyEvent) -> bool {
         KeyCode::Right => app.change_date(1),
         KeyCode::Down => app.nav(true),
         KeyCode::Up => app.nav(false),
-        KeyCode::Tab => app.cycle_view(),
-        KeyCode::Esc => {
-            app.table_state.select(None);
-            app.journal_state.select(None);
-        }
+        KeyCode::Esc => app.escape(),
         KeyCode::Char('d') => app.delete_selected_entry(),
         KeyCode::Char('r') => app.resume_selected(),
         KeyCode::Char('n') | KeyCode::Char('j') => app.open_journal_for_current(),
         KeyCode::Char('m') => app.dismiss_message(),
-        KeyCode::Enter => app.open_journal_for_selected(),
+        KeyCode::Enter => app.activate_selected(),
         _ => {}
     }
     false

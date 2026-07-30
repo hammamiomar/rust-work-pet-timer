@@ -1,56 +1,126 @@
-//! Headless render smoke tests: draw every view into a TestBackend buffer
-//! so layout math panics are caught by `cargo test`.
+//! Headless render tests for the stacked layout and expandable work log.
 
+use hamba_timer::app::{App, DeleteTarget};
 use ratatui::{Terminal, backend::TestBackend};
-use hamba_timer::app::App;
+use std::sync::Mutex;
 
-fn test_app() -> App {
-    let dir = std::env::temp_dir().join(format!("pet-timer-render-{}", std::process::id()));
+static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+fn test_app(name: &str) -> App {
+    let dir = std::env::temp_dir().join(format!("pet-timer-render-{name}-{}", std::process::id()));
+    std::fs::remove_dir_all(&dir).ok();
     std::fs::create_dir_all(&dir).unwrap();
     // Safety: tests in this file run in one process; nothing else reads this var.
     unsafe { std::env::set_var("PET_TIMER_DATA_DIR", &dir) };
     App::new().unwrap()
 }
 
-fn draw(app: &mut App, width: u16, height: u16) {
+fn draw(app: &mut App, width: u16, height: u16) -> String {
     let backend = TestBackend::new(width, height);
     let mut terminal = Terminal::new(backend).unwrap();
-    terminal.draw(|f| hamba_timer::ui::ui(f, app)).unwrap();
+    terminal
+        .draw(|frame| hamba_timer::ui::ui(frame, app))
+        .unwrap();
+    let buffer = terminal.backend().buffer();
+    (0..height)
+        .map(|y| {
+            (0..width)
+                .map(|x| buffer[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 #[test]
-fn renders_all_views_and_overlays() {
-    let mut app = test_app();
+fn dashboard_is_stacked_and_narrow_footer_is_complete() {
+    let _guard = ENV_LOCK.lock().unwrap();
+    let mut app = test_app("stacked");
+    let screen = draw(&mut app, 60, 40);
+    let pet_y = screen
+        .lines()
+        .position(|line| line.contains("ur brain"))
+        .unwrap();
+    let timer_y = screen
+        .lines()
+        .position(|line| line.contains("IDLE"))
+        .unwrap();
+    let log_y = screen
+        .lines()
+        .position(|line| line.contains("Work Log:"))
+        .unwrap();
 
-    for (w, h) in [(100, 32), (62, 20), (40, 10), (200, 60)] {
-        draw(&mut app, w, h);
+    assert!(pet_y < timer_y, "dashboard should be below the pet");
+    assert!(timer_y < log_y, "work log should be below the dashboard");
+    assert!(screen.contains("d d:delete"));
+    assert!(screen.contains("m:msg"));
+    assert!(screen.contains("q:quit"));
+}
+
+#[test]
+fn renders_inline_journal_and_all_edge_sizes() {
+    let _guard = ENV_LOCK.lock().unwrap();
+    let mut app = test_app("journal");
+
+    for (width, height) in [(100, 40), (60, 20), (40, 10), (200, 60)] {
+        let screen = draw(&mut app, width, height);
+        if width < 60 || height < 20 {
+            assert!(screen.contains("Terminal too small."));
+        }
     }
 
-    app.toggle_work_break();
     app.open_journal_for_current();
-    draw(&mut app, 100, 32);
-    if let Some(editor) = app.editor.as_mut() {
-        editor.textarea.insert_str("testing the journal editor");
-    }
-    draw(&mut app, 100, 32);
-    app.save_journal_entry();
+    app.editor
+        .as_mut()
+        .unwrap()
+        .textarea
+        .insert_str("testing the inline journal");
+    let editing = draw(&mut app, 60, 40);
+    assert!(editing.contains("+ new note"));
+    assert!(editing.contains("testing the inline journal"));
+    assert!(editing.contains("Enter:add next"));
 
-    app.cycle_view(); // journal
-    app.nav(true);
-    draw(&mut app, 100, 32);
-    app.cycle_view(); // stats
-    draw(&mut app, 100, 32);
-    app.cycle_view(); // back to history
-    app.nav(true);
-    draw(&mut app, 100, 32);
+    app.commit_journal_entry();
+    let saved = draw(&mut app, 60, 40);
+    assert!(saved.contains("testing the inline journal"));
+    assert!(saved.contains("+ new note"));
+    app.save_journal_entry(); // Empty draft: close editing.
+
+    app.journal_selection = Some(0);
+    app.activate_selected();
+    app.editor.as_mut().unwrap().textarea.insert_str(" updated");
+    app.commit_journal_entry();
+    let edited = draw(&mut app, 60, 40);
+    assert!(edited.contains("updated"));
+
+    app.journal_selection = Some(0);
+    app.delete_selected_entry();
+    assert!(matches!(
+        app.pending_delete,
+        Some(DeleteTarget::JournalEntry { .. })
+    ));
+    let confirming = draw(&mut app, 60, 40);
+    assert!(confirming.contains("Press d again to confirm"));
+    app.delete_selected_entry();
+
+    for index in 0..12 {
+        app.sessions[app.current_session_index].add_entry(format!("scroll note {index}"));
+    }
+    app.journal_selection = Some(12);
+    let journal_bottom = draw(&mut app, 60, 40);
+    assert!(journal_bottom.contains("scroll note 11"));
+    assert!(journal_bottom.contains("+ add note"));
+    app.journal_selection = Some(0);
+    let journal_top = draw(&mut app, 60, 40);
+    assert!(journal_top.contains("scroll note 0"));
 
     app.unread.push_back(hamba_timer::inbox::InboxMessage {
         id: 1,
         time: chrono::Utc::now(),
-        text: "you have been working for a while — take a break, drink some water, and pet a real animal".to_string(),
+        text: "you have been working for a while — take a break and drink some water".to_string(),
     });
-    draw(&mut app, 100, 32);
-    draw(&mut app, 62, 20);
+    let message = draw(&mut app, 60, 40);
+    assert!(message.contains("hermes"));
     app.dismiss_message();
 
     app.on_tick();
